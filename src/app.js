@@ -15,6 +15,21 @@ app.use(cors());
 app.use(helmet());
 app.use(express.json());
 
+function validateBearerToken(req, res, next) {
+  console.log("this is api key", process.env.API_TOKEN);
+  const apiToken = process.env.API_TOKEN;
+  const authToken = req.get("Authorization");
+
+  console.log("this is auth token", authToken.split(" ")[1]);
+  if (!authToken || authToken.split(" ")[1] !== apiToken) {
+    return res.status(401).json({ error: "Unauthorized request" });
+  }
+  next();
+}
+
+app.post("/address", validateBearerToken);
+app.delete("/address", validateBearerToken);
+
 const addresses = [
   {
     id: "UUID",
@@ -23,8 +38,8 @@ const addresses = [
     address1: "String",
     address2: "String",
     city: "String",
-    state: "String",
-    zip: "Number",
+    state: "SA",
+    zip: "91826",
   },
 ];
 
@@ -92,7 +107,17 @@ app.post("/address", (req, res) => {
   res.send("POST received");
 });
 
-app.delete("/", (req, res) => {
+app.delete("/address/:id", (req, res) => {
+  const { id } = req.params;
+
+  const index = addresses.findIndex((u) => u.id === id);
+
+  if (index === -1) {
+    return res.status(404).send("Contact Not Found");
+  }
+
+  addresses.splice(index, 1);
+
   res.send("deleted");
 });
 
